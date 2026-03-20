@@ -1,6 +1,6 @@
 # Unity Editor Navigator
 
-A lightweight Unity editor tool for reorganizing **GameObjects in the Hierarchy** and **moving assets in the Project window** — all without touching the mouse.
+A lightweight Unity editor tool for reorganizing **GameObjects in the Hierarchy** and **moving assets in the Project window**, all without touching the mouse.
 
 ---
 
