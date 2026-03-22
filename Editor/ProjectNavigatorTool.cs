@@ -6,22 +6,13 @@ using System.Collections.Generic;
 namespace HierarchyNavigator
 {
     /// <summary>
-    /// Editor tool for moving assets in the Project window using a two-phase keyboard workflow.
-    ///
-    /// Workflow:
-    ///   1. Select asset(s) in the Project window.
-    ///   2. Press Ctrl+Shift+↑ or ↓ to enter Move Mode.
-    ///   3. ↑/↓ navigates sibling folders at the current level.
-    ///   4. → goes INTO the highlighted folder (browse its children).
-    ///   5. ← goes OUT one level (browse the parent's siblings).
-    ///   6. Enter confirms the move. Escape cancels.
-    ///
-    /// The target folder is drawn with a green highlight and a "◄ TARGET" label.
+    /// Two-phase keyboard workflow for moving assets in the Project window.
+    /// Select assets, press Ctrl+Shift+Arrow to enter Move Mode, navigate folders, Enter to confirm.
     /// </summary>
     [InitializeOnLoad]
     public static class ProjectNavigatorTool
     {
-        // ── Move-mode state ──────────────────────────────────────────────
+        // Move-mode state
         private static bool         _inMoveMode;
         private static string[]     _assetPaths;        // selected assets to move
         private static string       _originalFolder;    // folder the assets started in
@@ -35,24 +26,19 @@ namespace HierarchyNavigator
         // Folders that must be excluded (selected folders + their subtrees)
         private static HashSet<string> _excludeRoots = new HashSet<string>();
 
-        // ── Visual constants ─────────────────────────────────────────────
         private static readonly Color HighlightFill   = new Color(0.1f, 0.75f, 0.25f, 0.22f);
         private static readonly Color HighlightBorder = new Color(0.1f, 0.85f, 0.3f, 0.7f);
         private static GUIStyle _targetLabelStyle;
 
-        // ── Initialization ───────────────────────────────────────────────
         static ProjectNavigatorTool()
         {
             EditorApplication.projectWindowItemOnGUI += OnProjectWindowItemGUI;
             Selection.selectionChanged += OnSelectionChanged;
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  GUI callback – fires once per visible item row in the Project window
-        // ─────────────────────────────────────────────────────────────────
+        // Fires once per visible item row in the Project window
         private static void OnProjectWindowItemGUI(string guid, Rect rect)
         {
-            // ── Draw highlight overlay on the target folder ──
             if (_inMoveMode && !string.IsNullOrEmpty(_targetFolder))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
@@ -74,7 +60,7 @@ namespace HierarchyNavigator
                 }
             }
 
-            // ── Keyboard handling ──
+            // Keyboard handling
             Event e = Event.current;
             if (e.type != EventType.KeyDown) return;
 
@@ -84,9 +70,7 @@ namespace HierarchyNavigator
                 HandleIdleInput(e);
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  Idle state – Ctrl+Shift+↑ or ↓ enters move mode
-        // ─────────────────────────────────────────────────────────────────
+        // Idle: Ctrl+Shift+Arrow enters move mode
         private static void HandleIdleInput(Event e)
         {
             if (!e.control || !e.shift) return;
@@ -108,9 +92,7 @@ namespace HierarchyNavigator
             e.Use();
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  Move-mode input – ↑↓ siblings, ←→ depth, Enter confirm, Esc cancel
-        // ─────────────────────────────────────────────────────────────────
+        // Move-mode: arrows navigate, Enter confirms, Esc cancels
         private static void HandleMoveModeInput(Event e)
         {
             if (e.control && e.shift)
@@ -150,32 +132,24 @@ namespace HierarchyNavigator
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  Move-mode lifecycle
-        // ─────────────────────────────────────────────────────────────────
+        // Move-mode lifecycle
 
         private static void EnterMoveMode(string[] assetPaths, int initialDirection)
         {
             _assetPaths     = assetPaths;
             _originalFolder = GetParentFolder(assetPaths[0]);
 
-            // Build exclude set (can't move a folder into itself)
             _excludeRoots.Clear();
             foreach (string p in assetPaths)
-            {
                 if (AssetDatabase.IsValidFolder(p))
                     _excludeRoots.Add(p);
-            }
 
-            // Start browsing sibling folders inside the same parent as the asset.
-            // e.g. asset is Assets/Art/Textures/MyTex.png → browse children of Assets/Art/Textures/
-            //      asset is Assets/Art/Textures (folder)  → browse children of Assets/Art/
+            // Start browsing sibling folders at the same level
             string containingFolder = _originalFolder ?? "Assets";
 
-            // Try to start among the folders at the same level as the selected asset
             if (!SetBrowseLevel(containingFolder, null))
             {
-                // No sub-folders at this level – fall back to parent's siblings
+                // Fall back to parent's siblings
                 string parentOfContaining = GetParentFolder(containingFolder);
                 if (parentOfContaining == null || !SetBrowseLevel(parentOfContaining, containingFolder))
                 {
@@ -190,16 +164,14 @@ namespace HierarchyNavigator
 
             _inMoveMode = true;
 
-            // Now step in the requested direction so the first press already moves the highlight
+            // Step in the requested direction
             NavigateSibling(initialDirection);
 
             UpdateTargetAndNotify("Move Mode (↑↓ siblings · →into · ←out · Enter confirm · Esc cancel)");
         }
 
         /// <summary>
-        /// Sets the browsing level to the children of <paramref name="parent"/>,
-        /// selecting <paramref name="selectFolder"/> if it exists in that list.
-        /// Returns false if no valid siblings exist at that level.
+        /// Sets browsing level to children of parent, selecting selectFolder if found.
         /// </summary>
         private static bool SetBrowseLevel(string parent, string selectFolder)
         {
@@ -215,9 +187,8 @@ namespace HierarchyNavigator
             return true;
         }
 
-        // ─── Navigation ─────────────────────────────────────────────────
+        // Navigation
 
-        /// <summary>Move up/down among sibling folders at the current level.</summary>
         private static void NavigateSibling(int direction)
         {
             if (_browseSiblings.Count == 0) return;
@@ -234,7 +205,7 @@ namespace HierarchyNavigator
             UpdateTargetAndNotify(null);
         }
 
-        /// <summary>→ Go into the highlighted folder – browse its children.</summary>
+        /// <summary>Go into the highlighted folder.</summary>
         private static void NavigateInto()
         {
             if (string.IsNullOrEmpty(_targetFolder)) return;
@@ -254,13 +225,13 @@ namespace HierarchyNavigator
             UpdateTargetAndNotify(null);
         }
 
-        /// <summary>← Go out one level – browse the parent's siblings.</summary>
+        /// <summary>Go out one level.</summary>
         private static void NavigateOut()
         {
             if (string.IsNullOrEmpty(_browseParent)) return; // already at root
 
-            string currentLevel = _browseParent;                 // the folder we're leaving
-            string grandParent  = GetParentFolder(_browseParent); // its parent (may be null → root)
+            string currentLevel = _browseParent;
+            string grandParent  = GetParentFolder(_browseParent);
 
             List<string> parentSiblings = GetChildFolders(grandParent);
             if (parentSiblings.Count == 0) return;
@@ -274,7 +245,7 @@ namespace HierarchyNavigator
             UpdateTargetAndNotify(null);
         }
 
-        // ─── Confirm / Cancel ────────────────────────────────────────────
+        // Confirm / Cancel
 
         private static void ConfirmMove()
         {
@@ -299,7 +270,7 @@ namespace HierarchyNavigator
 
                 if (newPath == assetPath) continue;
 
-                // Prevent moving a folder into itself or its own subtree
+                // Can't move a folder into itself
                 if (AssetDatabase.IsValidFolder(assetPath) &&
                     (_targetFolder == assetPath || _targetFolder.StartsWith(assetPath + "/")))
                 {
@@ -352,21 +323,18 @@ namespace HierarchyNavigator
             EditorApplication.RepaintProjectWindow();
         }
 
-        /// <summary>Exit move mode silently when the user clicks elsewhere.</summary>
+        /// <summary>Exit move mode when the user clicks elsewhere.</summary>
         private static void OnSelectionChanged()
         {
             if (_inMoveMode)
                 ExitMoveMode();
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  Folder helpers
-        // ─────────────────────────────────────────────────────────────────
+        // Folder helpers
 
         /// <summary>
-        /// Returns the immediate child folders of <paramref name="parent"/>,
-        /// filtering out any excluded folders (selected folders being moved).
-        /// Pass null for root-level (returns just "Assets").
+        /// Returns immediate child folders, filtering out excluded folders.
+        /// Pass null for root level.
         /// </summary>
         private static List<string> GetChildFolders(string parent)
         {
@@ -402,16 +370,13 @@ namespace HierarchyNavigator
             return result;
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  Utilities
-        // ─────────────────────────────────────────────────────────────────
+        // Utilities
 
         private static string GetParentFolder(string path)
         {
             if (string.IsNullOrEmpty(path)) return null;
             string parent = Path.GetDirectoryName(path)?.Replace("\\", "/");
             if (string.IsNullOrEmpty(parent)) return null;
-            // "Assets" parent is null for our purposes (top level)
             return parent;
         }
 

@@ -3,10 +3,6 @@ using UnityEditor;
 
 namespace HierarchyNavigator
 {
-    /// <summary>
-    /// Settings window for the Hierarchy Navigator tool.
-    /// Provides a help reference for available shortcuts.
-    /// </summary>
     public class HierarchyNavigatorSettings : EditorWindow
     {
         private Vector2 scrollPosition;
@@ -23,8 +19,7 @@ namespace HierarchyNavigator
         private void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            
-            // Header
+
             EditorGUILayout.Space(10);
             GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel)
             {
@@ -33,8 +28,7 @@ namespace HierarchyNavigator
             };
             EditorGUILayout.LabelField("Hierarchy Navigator", headerStyle);
             EditorGUILayout.Space(5);
-            
-            // Description
+
             EditorGUILayout.HelpBox(
                 "A tool for quickly reorganizing GameObjects in the hierarchy " +
                 "and moving assets in the Project window using keyboard shortcuts.",
@@ -42,8 +36,7 @@ namespace HierarchyNavigator
             );
             
             EditorGUILayout.Space(15);
-            
-            // --- Hierarchy Shortcuts ---
+
             EditorGUILayout.LabelField("Hierarchy Shortcuts", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
             
@@ -62,8 +55,7 @@ namespace HierarchyNavigator
             );
             
             EditorGUILayout.Space(15);
-            
-            // --- Project Move Mode ---
+
             EditorGUILayout.LabelField("Project Move Mode", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
             
@@ -99,8 +91,7 @@ namespace HierarchyNavigator
             );
             
             EditorGUILayout.Space(15);
-            
-            // Tips Section
+
             EditorGUILayout.LabelField("Tips", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
             

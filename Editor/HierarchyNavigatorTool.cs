@@ -5,15 +5,6 @@ using System.Collections.Generic;
 
 namespace HierarchyNavigator
 {
-    /// <summary>
-    /// Editor tool for quickly reorganizing GameObjects in the hierarchy using keyboard shortcuts.
-    /// 
-    /// Shortcuts:
-    /// - Ctrl+Shift+Up: Move selected GameObject(s) up in hierarchy
-    /// - Ctrl+Shift+Down: Move selected GameObject(s) down in hierarchy
-    /// - Ctrl+Shift+Left: Unparent selected GameObject(s) (move out)
-    /// - Ctrl+Shift+Right: Parent selected GameObject(s) to sibling above (move in)
-    /// </summary>
     [InitializeOnLoad]
     public static class HierarchyNavigatorTool
     {
@@ -21,19 +12,16 @@ namespace HierarchyNavigator
         
         static HierarchyNavigatorTool()
         {
-            // Register for hierarchy window GUI events to intercept shortcuts
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemGUI;
         }
         
         private static void OnHierarchyWindowItemGUI(int instanceID, Rect selectionRect)
         {
             Event e = Event.current;
-            
-            // Only process key events when we have selection
+
             if (e.type != EventType.KeyDown || Selection.gameObjects.Length == 0)
                 return;
-            
-            // Check for Ctrl+Shift modifier
+
             if (!e.control || !e.shift)
                 return;
             
@@ -66,9 +54,7 @@ namespace HierarchyNavigator
             }
             
             if (handled)
-            {
-                e.Use(); // Consume the event to prevent default behavior
-            }
+                e.Use();
         }
         
         #region Move Up/Down
@@ -97,7 +83,6 @@ namespace HierarchyNavigator
             return Selection.gameObjects.Length > 0;
         }
         
-        // Shortcut Manager bindings for better shortcut handling
         [Shortcut("Hierarchy Navigator/Move Up", KeyCode.UpArrow, ShortcutModifiers.Action | ShortcutModifiers.Shift)]
         private static void MoveUpShortcut()
         {
@@ -130,7 +115,6 @@ namespace HierarchyNavigator
                 MoveIn();
         }
         
-        /// <summary>Returns true when the Hierarchy window is the currently focused editor window.</summary>
         private static bool IsHierarchyFocused()
         {
             var focused = EditorWindow.focusedWindow;
@@ -142,17 +126,13 @@ namespace HierarchyNavigator
             GameObject[] selectedObjects = Selection.gameObjects;
             if (selectedObjects.Length == 0) return;
             
-            // Sort by sibling index based on direction
             List<GameObject> sortedObjects = new List<GameObject>(selectedObjects);
             sortedObjects.Sort((a, b) =>
             {
-                // If different parents, sort by parent
                 if (a.transform.parent != b.transform.parent)
                     return 0;
-                
-                // Sort by sibling index
                 int comparison = a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex());
-                return direction > 0 ? -comparison : comparison; // Reverse for moving down
+                return direction > 0 ? -comparison : comparison;
             });
             
             Undo.RecordObjects(GetTransforms(sortedObjects.ToArray()), "Move Objects in Hierarchy");
@@ -162,13 +142,10 @@ namespace HierarchyNavigator
                 Transform transform = obj.transform;
                 int currentIndex = transform.GetSiblingIndex();
                 int newIndex = currentIndex + direction;
-                
-                // Get sibling count
-                int siblingCount = transform.parent != null 
-                    ? transform.parent.childCount 
-                    : GetRootObjectCount(obj.scene);
-                
-                // Clamp to valid range
+                int siblingCount = transform.parent != null
+                    ? transform.parent.childCount
+                    : obj.scene.rootCount;
+
                 newIndex = Mathf.Clamp(newIndex, 0, siblingCount - 1);
                 
                 if (newIndex != currentIndex)
@@ -200,12 +177,9 @@ namespace HierarchyNavigator
         {
             if (Selection.gameObjects.Length == 0) return false;
             
-            // At least one object must have a parent
             foreach (GameObject obj in Selection.gameObjects)
-            {
                 if (obj.transform.parent != null)
                     return true;
-            }
             return false;
         }
         
@@ -228,12 +202,8 @@ namespace HierarchyNavigator
             // For multi-selection, we only need to check the top-most object
             List<GameObject> sortedSelection = GetSortedSelection();
             if (sortedSelection.Count > 0)
-            {
-                Transform topObject = sortedSelection[0].transform;
-                Transform sibling = GetSiblingAbove(topObject);
-                return sibling != null;
-            }
-            
+                return GetSiblingAbove(sortedSelection[0].transform) != null;
+
             return false;
         }
         
@@ -268,27 +238,16 @@ namespace HierarchyNavigator
             GameObject[] selectedObjects = Selection.gameObjects;
             if (selectedObjects.Length == 0) return;
 
-            // Get the sorted selection to find the top-most object
             List<GameObject> sortedObjects = GetSortedSelection();
             if (sortedObjects.Count == 0) return;
 
-            // Find the sibling above the entire selection
             Transform newParent = GetSiblingAbove(sortedObjects[0].transform);
+            if (newParent == null) return;
 
-            if (newParent != null)
-            {
-                Undo.RecordObjects(GetTransforms(sortedObjects.ToArray()), "Parent Objects");
+            Undo.RecordObjects(GetTransforms(sortedObjects.ToArray()), "Parent Objects");
 
-                // Parent all selected objects to the new parent
-                foreach (GameObject obj in sortedObjects)
-                {
-                    Undo.SetTransformParent(obj.transform, newParent, "Parent Object");
-                }
-
-                // Optional: maintain original order within the new parent
-                // This part can be adjusted based on desired behavior.
-                // For now, they will be added at the end.
-            }
+            foreach (GameObject obj in sortedObjects)
+                Undo.SetTransformParent(obj.transform, newParent, "Parent Object");
 
             EditorApplication.RepaintHierarchyWindow();
         }
@@ -298,21 +257,14 @@ namespace HierarchyNavigator
             int siblingIndex = transform.GetSiblingIndex();
             
             if (siblingIndex <= 0) return null;
-            
+
             if (transform.parent != null)
-            {
                 return transform.parent.GetChild(siblingIndex - 1);
-            }
-            else
-            {
-                // Root level object
-                GameObject[] rootObjects = transform.gameObject.scene.GetRootGameObjects();
-                if (siblingIndex > 0 && siblingIndex < rootObjects.Length)
-                {
-                    return rootObjects[siblingIndex - 1].transform;
-                }
-            }
-            
+
+            GameObject[] rootObjects = transform.gameObject.scene.GetRootGameObjects();
+            if (siblingIndex < rootObjects.Length)
+                return rootObjects[siblingIndex - 1].transform;
+
             return null;
         }
         
@@ -330,22 +282,13 @@ namespace HierarchyNavigator
             return transforms;
         }
         
-        private static int GetRootObjectCount(UnityEngine.SceneManagement.Scene scene)
-        {
-            return scene.rootCount;
-        }
-
         private static List<GameObject> GetSortedSelection()
         {
             List<GameObject> sortedSelection = new List<GameObject>(Selection.gameObjects);
             sortedSelection.Sort((a, b) =>
             {
                 if (a.transform.parent != b.transform.parent)
-                {
-                    // This case is complex to handle correctly for sorting across different parents.
-                    // For now, we can assume selection is within the same parent or at root.
                     return 0;
-                }
                 return a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex());
             });
             return sortedSelection;
