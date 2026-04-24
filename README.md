@@ -1,74 +1,64 @@
 # Unity Editor Navigator
 
-A Unity Editor tool for reorganizing GameObjects in the Hierarchy and moving assets in the Project window, all without touching the mouse.
+## What This Tool Does
+Unity Editor Navigator adds keyboard-first workflows to the Unity editor so you can reorganize Hierarchy objects and move Project assets without relying on drag-and-drop.
 
----
+## Why It Helps
+- Reduces repetitive mouse work during scene and project cleanup.
+- Makes large refactors faster when moving many objects or assets.
+- Keeps your flow focused when you prefer keyboard navigation.
 
 ## Features
-
-- Reorder and reparent GameObjects in the Hierarchy using keyboard shortcuts
-- Move assets to any folder through a keyboard-driven move mode
-- Full undo support (`Ctrl+Z`)
-- Works with multi-selection
-
----
-
-## Requirements
-
-- Unity 6000.1 or later
-
----
+- Hierarchy object move up/down by sibling index.
+- Hierarchy reparenting (move in) and unparenting (move out).
+- Project asset Move Mode with highlighted target folder.
+- Multi-selection support.
+- Undo support for Hierarchy operations.
+- Settings/help window with shortcut reference.
 
 ## Installation
+### Option A: Add from Git URL
+1. Open Unity Package Manager.
+2. Click + then Add package from git URL.
+3. Paste this package repository URL.
 
-### Option A — Unity Package Manager (recommended)
+### Option B: Local package folder
+1. Copy `unity-editor-navigator` into your project's `Packages` folder.
+2. Reopen Unity or wait for package refresh.
 
-1. Open **Window → Package Manager**
-2. Click the **+** button → **Add package from git URL...**
-3. Enter the repository URL and click **Add**
-
-### Option B — Manual
-
-1. Download or clone this repository
-2. Copy the `unity-editor-navigator` folder into your project's `Packages/` directory
-3. Unity will automatically detect and import the package
-
----
-
-## How It Works
-
-### Hierarchy Navigator
-
-Select one or more GameObjects in the Hierarchy window and use the shortcuts below.
+## How To Use
+### Hierarchy shortcuts
+Use these while Hierarchy is focused:
 
 | Shortcut | Action |
 |---|---|
-| `Ctrl + Shift + ↑` | Move selected object(s) up |
-| `Ctrl + Shift + ↓` | Move selected object(s) down |
-| `Ctrl + Shift + →` | Parent to the sibling above (move in) |
-| `Ctrl + Shift + ←` | Unparent (move out to parent's level) |
+| Ctrl + Shift + Up | Move selected object(s) up |
+| Ctrl + Shift + Down | Move selected object(s) down |
+| Ctrl + Shift + Right | Parent under sibling above |
+| Ctrl + Shift + Left | Unparent to parent level |
 
-### Project Navigator — Move Mode
+Menu path: `Tools/Hierarchy Navigator/...`
 
-Moving assets uses a two-phase workflow:
+### Project Move Mode
+1. Select one or more assets in Project window.
+2. Press Ctrl + Shift + Up or Down to enter Move Mode.
+3. Navigate target folder:
+   - Ctrl + Shift + Up/Down: sibling folders
+   - Ctrl + Shift + Right: enter highlighted folder
+   - Ctrl + Shift + Left: move up one level
+4. Press Enter to confirm move.
+5. Press Escape to cancel.
 
-1. Select one or more assets in the Project window
-2. Press `Ctrl + Shift + ↑` or `↓` to enter Move Mode
-3. A green-highlighted folder appears as the target destination
-4. Navigate to the desired folder:
-   - `↑` / `↓` — browse sibling folders at the current level
-   - `→` — go into the highlighted folder
-   - `←` — go up one level
-5. Press `Enter` to confirm the move, or `Escape` to cancel
+Menu path for guide window: `Tools/Hierarchy Navigator/Settings && Help`
 
----
+## Example Workflow
+1. Reorganize scene root objects with the Hierarchy shortcuts.
+2. Select textures or scripts in Project and move them into a feature folder using Move Mode.
+3. Use the help window to check shortcuts while onboarding teammates.
 
-## Settings & Help
+## Notes
+- Project asset moves are file operations and are not covered by Unity Undo.
+- Hierarchy moves and reparenting use Undo.
 
-Access the full shortcut reference at any time via **Tools → Hierarchy Navigator → Settings & Help**.
-
----
-
-## Author
-
-Made by [mhze](mailto:mhze.uk@gmail.com)
+## License
+See `LICENSE.md` in this package.

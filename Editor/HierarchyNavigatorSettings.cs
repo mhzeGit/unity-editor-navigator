@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace HierarchyNavigator
@@ -40,17 +40,17 @@ namespace HierarchyNavigator
             EditorGUILayout.LabelField("Hierarchy Shortcuts", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
             
-            DrawShortcutRow("Ctrl + Shift + ↑", "Move selected object(s) UP in hierarchy");
-            DrawShortcutRow("Ctrl + Shift + ↓", "Move selected object(s) DOWN in hierarchy");
-            DrawShortcutRow("Ctrl + Shift + ←", "Unparent (move OUT of parent)");
-            DrawShortcutRow("Ctrl + Shift + →", "Parent to sibling above (move IN)");
+            DrawShortcutRow("Ctrl + Shift + Up", "Move selected object(s) UP in hierarchy");
+            DrawShortcutRow("Ctrl + Shift + Down", "Move selected object(s) DOWN in hierarchy");
+            DrawShortcutRow("Ctrl + Shift + Left", "Unparent (move OUT of parent)");
+            DrawShortcutRow("Ctrl + Shift + Right", "Parent to sibling above (move IN)");
             
             EditorGUILayout.Space(5);
             EditorGUILayout.HelpBox(
-                "• Works with multiple selected objects\n" +
-                "• All operations support Undo (Ctrl+Z)\n" +
-                "• Move In: Parents to the sibling directly above\n" +
-                "• Move Out: Moves object to same level as current parent",
+                "- Works with multiple selected objects\n" +
+                "- All operations support Undo (Ctrl+Z)\n" +
+                "- Move In: Parents to the sibling directly above\n" +
+                "- Move Out: Moves object to same level as current parent",
                 MessageType.None
             );
             
@@ -62,31 +62,31 @@ namespace HierarchyNavigator
             EditorGUILayout.HelpBox(
                 "Move Mode is a two-step workflow for moving assets between folders:\n\n" +
                 "1. Select asset(s) in the Project window\n" +
-                "2. Press Ctrl+Shift+↑ or ↓ to enter Move Mode\n" +
+                "2. Press Ctrl+Shift+Up or Down to enter Move Mode\n" +
                 "3. A green-highlighted target folder appears\n" +
-                "4. ↑↓ browse sibling folders at the same level\n" +
-                "5. → go INTO the highlighted folder (browse children)\n" +
-                "6. ← go OUT one level (browse parent's siblings)\n" +
+                "4. Up/Down browse sibling folders at the same level\n" +
+                "5. Right goes INTO the highlighted folder (browse children)\n" +
+                "6. Left goes OUT one level (browse parent's siblings)\n" +
                 "7. Press Enter to move, or Escape to cancel",
                 MessageType.Info
             );
             
             EditorGUILayout.Space(5);
             
-            DrawShortcutRow("Ctrl + Shift + ↑", "Previous sibling folder");
-            DrawShortcutRow("Ctrl + Shift + ↓", "Next sibling folder");
-            DrawShortcutRow("Ctrl + Shift + →", "Go into folder (browse children)");
-            DrawShortcutRow("Ctrl + Shift + ←", "Go out one level (browse parent)");
+            DrawShortcutRow("Ctrl + Shift + Up", "Previous sibling folder");
+            DrawShortcutRow("Ctrl + Shift + Down", "Next sibling folder");
+            DrawShortcutRow("Ctrl + Shift + Right", "Go into folder (browse children)");
+            DrawShortcutRow("Ctrl + Shift + Left", "Go out one level (browse parent)");
             DrawShortcutRow("Enter", "Confirm move to highlighted folder");
             DrawShortcutRow("Escape", "Cancel move mode");
             
             EditorGUILayout.Space(5);
             EditorGUILayout.HelpBox(
-                "• Works with files, scripts, folders, and any asset\n" +
-                "• Multi-selection supported\n" +
-                "• Name conflicts are handled automatically\n" +
-                "• File moves do NOT support Undo\n" +
-                "• Clicking elsewhere also cancels move mode",
+                "- Works with files, scripts, folders, and any asset\n" +
+                "- Multi-selection supported\n" +
+                "- Name conflicts are handled automatically\n" +
+                "- File moves do NOT support Undo\n" +
+                "- Clicking elsewhere also cancels move mode",
                 MessageType.None
             );
             
@@ -96,9 +96,9 @@ namespace HierarchyNavigator
             EditorGUILayout.Space(5);
             
             EditorGUILayout.HelpBox(
-                "• Shortcuts are context-aware: they apply to the Hierarchy " +
+                "- Shortcuts are context-aware: they apply to the Hierarchy " +
                 "window or Project window depending on which is focused.\n" +
-                "• All commands are also available via: Tools → Hierarchy Navigator",
+                "- All commands are also available via: Tools -> Hierarchy Navigator",
                 MessageType.None
             );
             

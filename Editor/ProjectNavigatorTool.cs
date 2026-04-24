@@ -1,29 +1,22 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 
 namespace HierarchyNavigator
 {
-    /// <summary>
-    /// Two-phase keyboard workflow for moving assets in the Project window.
-    /// Select assets, press Ctrl+Shift+Arrow to enter Move Mode, navigate folders, Enter to confirm.
-    /// </summary>
     [InitializeOnLoad]
     public static class ProjectNavigatorTool
     {
-        // Move-mode state
         private static bool         _inMoveMode;
         private static string[]     _assetPaths;        // selected assets to move
         private static string       _originalFolder;    // folder the assets started in
         private static string       _targetFolder;      // currently highlighted folder
 
-        // Current browsing level: the parent whose children we are listing
         private static string       _browseParent;
         private static List<string> _browseSiblings = new List<string>();
         private static int          _browseIndex;
 
-        // Folders that must be excluded (selected folders + their subtrees)
         private static HashSet<string> _excludeRoots = new HashSet<string>();
 
         private static readonly Color HighlightFill   = new Color(0.1f, 0.75f, 0.25f, 0.22f);
@@ -36,7 +29,6 @@ namespace HierarchyNavigator
             Selection.selectionChanged += OnSelectionChanged;
         }
 
-        // Fires once per visible item row in the Project window
         private static void OnProjectWindowItemGUI(string guid, Rect rect)
         {
             if (_inMoveMode && !string.IsNullOrEmpty(_targetFolder))
@@ -56,11 +48,10 @@ namespace HierarchyNavigator
                             alignment = TextAnchor.MiddleRight
                         };
                     }
-                    GUI.Label(rect, "◄ TARGET  ", _targetLabelStyle);
+                    GUI.Label(rect, "<- TARGET  ", _targetLabelStyle);
                 }
             }
 
-            // Keyboard handling
             Event e = Event.current;
             if (e.type != EventType.KeyDown) return;
 
@@ -70,7 +61,6 @@ namespace HierarchyNavigator
                 HandleIdleInput(e);
         }
 
-        // Idle: Ctrl+Shift+Arrow enters move mode
         private static void HandleIdleInput(Event e)
         {
             if (!e.control || !e.shift) return;
@@ -92,7 +82,6 @@ namespace HierarchyNavigator
             e.Use();
         }
 
-        // Move-mode: arrows navigate, Enter confirms, Esc cancels
         private static void HandleMoveModeInput(Event e)
         {
             if (e.control && e.shift)
@@ -132,7 +121,6 @@ namespace HierarchyNavigator
             }
         }
 
-        // Move-mode lifecycle
 
         private static void EnterMoveMode(string[] assetPaths, int initialDirection)
         {
@@ -144,16 +132,13 @@ namespace HierarchyNavigator
                 if (AssetDatabase.IsValidFolder(p))
                     _excludeRoots.Add(p);
 
-            // Start browsing sibling folders at the same level
             string containingFolder = _originalFolder ?? "Assets";
 
             if (!SetBrowseLevel(containingFolder, null))
             {
-                // Fall back to parent's siblings
                 string parentOfContaining = GetParentFolder(containingFolder);
                 if (parentOfContaining == null || !SetBrowseLevel(parentOfContaining, containingFolder))
                 {
-                    // Last resort: browse from Assets root
                     if (!SetBrowseLevel(null, "Assets"))
                     {
                         Debug.LogWarning("[Project Navigator] No valid target folders found.");
@@ -164,15 +149,11 @@ namespace HierarchyNavigator
 
             _inMoveMode = true;
 
-            // Step in the requested direction
             NavigateSibling(initialDirection);
 
-            UpdateTargetAndNotify("Move Mode (↑↓ siblings · →into · ←out · Enter confirm · Esc cancel)");
+            UpdateTargetAndNotify("Move Mode (Up/Down siblings, Right into, Left out, Enter confirm, Esc cancel)");
         }
 
-        /// <summary>
-        /// Sets browsing level to children of parent, selecting selectFolder if found.
-        /// </summary>
         private static bool SetBrowseLevel(string parent, string selectFolder)
         {
             _browseParent = parent;
@@ -187,7 +168,6 @@ namespace HierarchyNavigator
             return true;
         }
 
-        // Navigation
 
         private static void NavigateSibling(int direction)
         {
@@ -205,7 +185,6 @@ namespace HierarchyNavigator
             UpdateTargetAndNotify(null);
         }
 
-        /// <summary>Go into the highlighted folder.</summary>
         private static void NavigateInto()
         {
             if (string.IsNullOrEmpty(_targetFolder)) return;
@@ -225,7 +204,6 @@ namespace HierarchyNavigator
             UpdateTargetAndNotify(null);
         }
 
-        /// <summary>Go out one level.</summary>
         private static void NavigateOut()
         {
             if (string.IsNullOrEmpty(_browseParent)) return; // already at root
@@ -245,7 +223,6 @@ namespace HierarchyNavigator
             UpdateTargetAndNotify(null);
         }
 
-        // Confirm / Cancel
 
         private static void ConfirmMove()
         {
@@ -257,7 +234,7 @@ namespace HierarchyNavigator
 
             if (_targetFolder == _originalFolder)
             {
-                CancelMoveMode("Target is the same as origin – cancelled.");
+                CancelMoveMode("Target is the same as origin - cancelled.");
                 return;
             }
 
@@ -270,7 +247,6 @@ namespace HierarchyNavigator
 
                 if (newPath == assetPath) continue;
 
-                // Can't move a folder into itself
                 if (AssetDatabase.IsValidFolder(assetPath) &&
                     (_targetFolder == assetPath || _targetFolder.StartsWith(assetPath + "/")))
                 {
@@ -287,7 +263,7 @@ namespace HierarchyNavigator
                 }
                 else
                 {
-                    Debug.LogWarning($"[Project Navigator] Failed to move '{assetPath}' → '{newPath}': {error}");
+                    Debug.LogWarning($"[Project Navigator] Failed to move '{assetPath}' -> '{newPath}': {error}");
                 }
             }
 
@@ -295,7 +271,7 @@ namespace HierarchyNavigator
             {
                 AssetDatabase.Refresh();
                 ReselectAssets(movedPaths);
-                ShowNotification($"Moved {movedPaths.Count} asset(s) → {_targetFolder}");
+                ShowNotification($"Moved {movedPaths.Count} asset(s) -> {_targetFolder}");
             }
             else
             {
@@ -323,26 +299,19 @@ namespace HierarchyNavigator
             EditorApplication.RepaintProjectWindow();
         }
 
-        /// <summary>Exit move mode when the user clicks elsewhere.</summary>
         private static void OnSelectionChanged()
         {
             if (_inMoveMode)
                 ExitMoveMode();
         }
 
-        // Folder helpers
 
-        /// <summary>
-        /// Returns immediate child folders, filtering out excluded folders.
-        /// Pass null for root level.
-        /// </summary>
         private static List<string> GetChildFolders(string parent)
         {
             List<string> result = new List<string>();
 
             if (parent == null)
             {
-                // Root level – only "Assets"
                 if (!_excludeRoots.Contains("Assets"))
                     result.Add("Assets");
                 return result;
@@ -353,7 +322,6 @@ namespace HierarchyNavigator
 
             foreach (string s in subs)
             {
-                // Skip excluded folders (the ones being moved)
                 bool excluded = false;
                 foreach (string ex in _excludeRoots)
                 {
@@ -370,7 +338,6 @@ namespace HierarchyNavigator
             return result;
         }
 
-        // Utilities
 
         private static string GetParentFolder(string path)
         {

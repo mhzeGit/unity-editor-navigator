@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UnityEditor.ShortcutManagement;
 using System.Collections.Generic;
@@ -199,7 +199,6 @@ namespace HierarchyNavigator
         {
             if (Selection.gameObjects.Length == 0) return false;
 
-            // For multi-selection, we only need to check the top-most object
             List<GameObject> sortedSelection = GetSortedSelection();
             if (sortedSelection.Count > 0)
                 return GetSiblingAbove(sortedSelection[0].transform) != null;
@@ -224,7 +223,6 @@ namespace HierarchyNavigator
                     Transform grandParent = parent.parent;
                     int parentSiblingIndex = parent.GetSiblingIndex();
                     
-                    // Move to grandparent (or root) right after the current parent
                     Undo.SetTransformParent(transform, grandParent, "Unparent Object");
                     transform.SetSiblingIndex(parentSiblingIndex + 1);
                 }
